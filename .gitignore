@@ -1,0 +1,4 @@
+# git忽略规则
+
+
+/node_modules

@@ -1,0 +1,10 @@
+//查询枚举
+module.exports = {
+    ZK_USERINFO: "ZK_USERINFO",
+    ZK_PERMITINFO: "ZK_PERMITINFO",
+    ZK_PERMITCONFIG: "ZK_PERMITCONFIG",
+    ZK_ROLEINFO: "ZK_ROLEINFO",
+    ZK_PARAMINFO: "ZK_PARAMINFO",
+    BindNavtree: "BindNavtree",
+    ZK_INVESTMEN: "ZK_INVESTMEN"
+};
