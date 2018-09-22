@@ -8,12 +8,13 @@ var app = require('../app');
 var debug = require('debug')('nodeexpress:server');
 var http = require('http');
 var Webglobal = require('../web.global');
+var { HttpPort } = require('../web.config');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
+var port = normalizePort(HttpPort);
 app.set('port', port);
 
 /**

@@ -7,5 +7,7 @@ module.exports = {
         port: '3306',
         database: '*****'
     },
-    TokenSecret: "msg is a handsome boy"
+    TokenSecret: "msg is a handsome boy",
+    HttpPort: 3000,
+    WebsocketPort: 5000
 };
