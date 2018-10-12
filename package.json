@@ -20,6 +20,7 @@
     "nodejs-websocket": "^1.7.1"
   },
   "devDependencies": {
+    "ejs": "^2.6.1",
     "nodemon": "^1.18.4"
   }
 }
