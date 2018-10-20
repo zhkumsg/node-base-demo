@@ -3,7 +3,7 @@ const router = express.Router();
 const client = require('../common/ServiceClient');
 const { MsgJsonHelper, QueryModel, MemoryCondition, MType, MLogic, MOperator } = require('../common/common.module');
 const Routebase = require('./route.base');
-const child_process = require('child_process');
+const child_process = require('child_process'); //可以使用shelljs运行cmd命令
 
 router.post("/", function (req, res, next) {
     if (!Routebase.IsLogin(req, res)) { return; }

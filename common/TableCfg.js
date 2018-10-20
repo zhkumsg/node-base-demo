@@ -19,6 +19,18 @@ module.exports = {
         name: "ZK_PARAMINFO",
         pk: "ZK_ID"
     },
+    ZK_INVESTOR: {
+        name: "ZK_INVESTOR",
+        pk: "ZK_ID"
+    },
+    ZK_INVESTOR_CASE: {
+        name: "ZK_INVESTOR_CASE",
+        pk: "ZK_ID"
+    },
+    ZK_INVESTOR_TEAM: {
+        name: "ZK_INVESTOR_TEAM",
+        pk: "ZK_ID"
+    },
     ZK_INVESTMENT: {
         name: "ZK_INVESTMENT",
         pk: "ZK_ID"

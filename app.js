@@ -10,6 +10,7 @@ var usersRouter = require('./routes/users');
 var startRouter = require('./routes/start');
 var homeRouter = require('./routes/home');
 var mainRouter = require('./routes/main');
+var investorRouter = require('./routes/investor');
 var investmentRouter = require('./routes/investment');
 var paramPouter = require('./routes/param');
 var permitconfigRouter = require('./routes/permitconfig');
@@ -23,14 +24,20 @@ var app = express();
 app.all('*', function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Expose-Headers", "access-token");
   res.header("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,access-token,permit-token");
   res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
   res.header("X-Powered-By", " 3.2.1");
   res.header("Content-Type", "application/json;charset=utf-8");
   if (req.headers["access-token"] && req.method.toLocaleUpperCase() !== "OPTIONS") {
     TokenHelper.get(req.headers["access-token"]).then(user => {
+      delete user.iat;
+      delete user.exp;
       req["UserInfo"] = user;
+      res.header("access-token", TokenHelper.set(user));
       TokenHelper.get(req.headers["permit-token"]).then(permit => {
+        delete permit.iat;
+        delete permit.exp;
         req["UserPermit"] = permit;
         next();
       });
@@ -58,6 +65,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use("/Http/Msg/MsgStart.ashx", startRouter);
 app.use("/Http/Msg/HomeServer.ashx", homeRouter);
 app.use("/Http/Msg/MainServer.ashx", mainRouter);
+app.use("/Http/Msg/InvestorServer.ashx", investorRouter);
 app.use("/Http/Msg/InvestmentServer.ashx", investmentRouter);
 app.use("/Http/Msg/ParamServer.ashx", paramPouter);
 app.use("/Http/Msg/PermitconfigServer.ashx", permitconfigRouter);

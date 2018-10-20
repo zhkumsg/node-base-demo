@@ -5,6 +5,9 @@ const {
     ZK_PERMITCONFIG,
     ZK_ROLEINFO,
     ZK_PARAMINFO,
+    ZK_INVESTOR,
+    ZK_INVESTOR_CASE,
+    ZK_INVESTOR_TEAM,
     ZK_INVESTMENT
 } = require('../model/model.module');
 
@@ -27,6 +30,9 @@ var ServiceClient = {
             case QueryModel.ZK_PERMITCONFIG: result = this.getqueryPara(ZK_PERMITCONFIG); break;
             case QueryModel.ZK_ROLEINFO: result = this.getqueryPara(ZK_ROLEINFO); break;
             case QueryModel.ZK_PARAMINFO: result = this.getqueryPara(ZK_PARAMINFO); break;
+            case QueryModel.ZK_INVESTOR: result = this.getqueryPara(ZK_INVESTOR); break;
+            case QueryModel.ZK_INVESTOR_CASE: result = this.getqueryPara(ZK_INVESTOR_CASE); break;
+            case QueryModel.ZK_INVESTOR_TEAM: result = this.getqueryPara(ZK_INVESTOR_TEAM); break;
             case QueryModel.ZK_INVESTMENT: result = this.getqueryPara(ZK_INVESTMENT); break;
         }
         if (result.length > 0) {
