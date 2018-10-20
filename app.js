@@ -34,7 +34,9 @@ app.all('*', function (req, res, next) {
       delete user.iat;
       delete user.exp;
       req["UserInfo"] = user;
-      res.header("access-token", TokenHelper.set(user));
+      if (user && !(/logout/gi.test(req.url))) {
+        res.header("access-token", TokenHelper.set(user));
+      }
       TokenHelper.get(req.headers["permit-token"]).then(permit => {
         delete permit.iat;
         delete permit.exp;
