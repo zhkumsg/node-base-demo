@@ -7,7 +7,7 @@
 nodejs、express、sql server 2008r2、mysql
 
 #### 准备工作
-1. 在项目根目录创建web.config.js配置文件（可从附件中下载模板），内容如下
+1. 在项目根目录创建web.config.js配置文件（[可从附件中下载模板](https://gitee.com/zhkumsg/node-base-demo/attach_files)），内容如下
 > module.exports = {
 >     DbConnectionString: "mssql://sa:123456@127.0.0.1:1433/AuthPublish", //mssql连接字符串
 >     MySqlConnectionCfg: {                                               //mysql连接配置 
