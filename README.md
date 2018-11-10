@@ -4,7 +4,7 @@
 手摸手，教你用nodejs搭建后台最小系统
 
 #### 软件架构
-nodejs、express、sql server 2008r2
+nodejs、express、sql server 2008r2、mysql
 
 
 #### 安装教程
@@ -18,6 +18,9 @@ nodejs、express、sql server 2008r2
 2. [手摸手，教你用nodejs搭建后台最小系统（大量图文）系列二](https://www.jianshu.com/p/60d6dc2d901a)
 3. [数据库结构与数据脚本](https://gitee.com/zhkumsg/node-base-demo/attach_files)
 4. [vue管理系统](https://gitee.com/zhkumsg/vue-base-demo)
+5. 测试账号：admin、测试密码：123456
+6. sqlserver：默认本机127.0.0.1，账号sa，密码123456
+7. mysql： 默认linux.msg.com，账号：***，密码***
 
 
 # 接口文档
