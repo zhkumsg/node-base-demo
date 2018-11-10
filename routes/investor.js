@@ -113,7 +113,6 @@ function GetInvestorDetail(req, res) {
         value: id
     }));
     client.Query(QueryModel.ZK_INVESTOR, [condition[0]], null, 0, 0, false, new SortParam()).then(m1 => {
-        console.log(123456,m1);
         if (m1.result.length > 0) {
             client.Query(QueryModel.ZK_INVESTOR_CASE, [condition[1]], null, 0, 0, false, new SortParam()).then(m2 => {
                 client.Query(QueryModel.ZK_INVESTOR_TEAM, [condition[1]], null, 0, 0, false, new SortParam()).then(m3 => {

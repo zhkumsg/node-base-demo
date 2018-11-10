@@ -3,6 +3,7 @@ const OperationEnum = require('./OperationEnum');
 const TransParams = require('./TransParams');
 const DsParams = require('./DsParams');
 const uuid = require('node-uuid');
+const { DbType } = require('../web.config');
 
 var Public = {
 
@@ -175,7 +176,11 @@ var Public = {
                                 paramsvalue: obj[pf]
                             }));
                             if (filter.join("").indexOf("EB_LASTMODIFY_DATETIME") === -1) {//改动点三：添加最后修改时间判断
-                                filter.push(" and datediff(S, EB_LASTMODIFY_DATETIME, @" + index + "_currentLastTime_" + ") = 0 ");
+                                if(DbType==="MSSQL"){
+                                    filter.push(" and datediff(S, EB_LASTMODIFY_DATETIME, @" + index + "_currentLastTime_" + ") = 0 ");
+                                }else if(DbType==="MYSQL"){
+                                    filter.push(" and TIMESTAMPDIFF(SECOND, EB_LASTMODIFY_DATETIME, @" + index + "_currentLastTime_" + ") = 0 ");
+                                }
                                 params.push(new DsParams({
                                     paramsname: index + "_currentLastTime_",
                                     paramsvalue: _lastTime

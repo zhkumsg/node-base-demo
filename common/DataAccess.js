@@ -1,15 +1,26 @@
-const sql = require('mssql');
-const { DbConnectionString } = require('../web.config');
+const mssql = require('mssql');
+const mysql = require("mysql");
+const { DbConnectionString, MySqlConnectionCfg, DbType } = require('../web.config');
 const TransParams = require('./TransParams');
 
 class DataAccess {
     constructor(config) {
         try {
-            if (!global["globalConnection"]) {
-                if (config !== undefined) { sql.close(); }
-                global["globalConnection"] = sql.connect(config || DbConnectionString);
+            if (DbType === "MSSQL") {
+                if (!global["globalConnection"]) {
+                    if (config !== undefined) { mssql.close(); }
+                    global["globalConnection"] = mssql.connect(config || DbConnectionString);
+                }
+                this.connection = global["globalConnection"];
+            } else if (DbType === "MYSQL") {
+                if (!global["globalConnection"]) {
+                    if (config !== undefined) { /**关闭全局mysql连接 */ }
+                    global["globalConnection"] = mysql.createConnection(config || MySqlConnectionCfg);
+                    global["globalConnection"].connect();
+                    global["globalConnection"].config.queryFormat = this.mysqlQueryFormat;
+                }
+                this.connection = global["globalConnection"];
             }
-            this.connection = global["globalConnection"];
         } catch (err) {
             throw err;
         }
@@ -21,14 +32,39 @@ class DataAccess {
      */
     GetTable(sqlstring) {
         return new Promise((resolve, reject) => {
-            this.connection.then(pool => {
-                return pool.request().query(sqlstring);
-            }).then(result => {
-                resolve(result.recordset);
-            }).catch(err => {
-                reject(err);
-            });
-            sql.on("error", err => { reject(err); });
+            try {
+                if (DbType === "MSSQL") {
+                    this.connection.then(pool => {
+                        return pool.request().query(sqlstring);
+                    }).then(result => {
+                        resolve(result.recordset);
+                    }).catch(err => {
+                        reject(err);
+                    });
+                    mssql.on("error", err => { reject(err); });
+                } else if (DbType === "MYSQL") {
+                    this.connection.query(sqlstring, (err, result) => {
+                        if (err) {
+                            reject(err.message);
+                        } else {
+                            let _result = [];
+                            result.forEach(item => {
+                                let obj = {};
+                                for (let name in item) {
+                                    if (item[name] instanceof Date) {
+                                        item[name] = this.RemoveDateMsec(item[name]);
+                                    }
+                                    obj[name] = item[name];
+                                }
+                                _result.push(obj);
+                            });
+                            resolve(_result);
+                        }
+                    });
+                }
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
@@ -40,22 +76,40 @@ class DataAccess {
      */
     RunQuery(sqlstring) {
         return new Promise((resolve, reject) => {
-            this.connection.then(pool => {
-                let transaction = pool.transaction();
-                transaction.begin(err => {
-                    let request = transaction.request();
-                    request.query(sqlstring, (err, result) => {
-                        if (err) {
-                            transaction.rollback();
-                            resolve(false);
-                        } else {
-                            transaction.commit();
-                            resolve(result.rowsAffected[0] > 0);
-                        }
+            try {
+                if (DbType === "MSSQL") {
+                    this.connection.then(pool => {
+                        let transaction = pool.transaction();
+                        transaction.begin(err => {
+                            let request = transaction.request();
+                            request.query(sqlstring, (err, result) => {
+                                if (err) {
+                                    transaction.rollback();
+                                    resolve(false);
+                                } else {
+                                    transaction.commit();
+                                    resolve(result.rowsAffected[0] > 0);
+                                }
+                            });
+                        });
                     });
-                });
-            });
-            sql.on("error", err => { reject(err); });
+                    mssql.on("error", err => { reject(err); });
+                } else if (DbType === "MYSQL") {
+                    this.connection.beginTransaction(err => {
+                        this.connection.query(sqlstring, (err, result) => {
+                            if (err) {
+                                this.connection.rollback();
+                                reject(err.message);
+                            } else {
+                                this.connection.commit();
+                                resolve(result.affectedRows > 0);
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
@@ -66,30 +120,53 @@ class DataAccess {
     TransRunQuery(transParams) {
         if (!transParams) { return Promise.reject("参数不能为空"); }
         return new Promise((resolve, reject) => {
-            this.connection.then(pool => {
-                let transaction = pool.transaction();
-                transaction.begin(err => {
-                    let request = transaction.request();
+            try {
+                if (DbType === "MSSQL") {
+                    this.connection.then(pool => {
+                        let transaction = pool.transaction();
+                        transaction.begin(err => {
+                            let request = transaction.request();
+                            transParams.l_dp.forEach(dp => {
+                                if (dp.paramsvalue instanceof Date) {
+                                    dp.paramsvalue = this.RemoveDateMsec(dp.paramsvalue);
+                                }
+                                request = request.input(dp.paramsname, dp.paramsvalue);
+                            });
+                            request.query(transParams.sql, (err, result) => {
+                                if (err) {
+                                    transaction.rollback();
+                                    resolve(false);
+                                } else {
+                                    transaction.commit();
+                                    resolve(result.rowsAffected[0] > 0);
+                                }
+                            });
+                        });
+                    });
+                    mssql.on("error", err => { reject(err); });
+                } else if (DbType === "MYSQL") {
+                    let queryObj = {};
                     transParams.l_dp.forEach(dp => {
                         if (dp.paramsvalue instanceof Date) {
                             dp.paramsvalue = this.RemoveDateMsec(dp.paramsvalue);
-                            request = request.input(dp.paramsname, dp.paramsvalue);
-                        } else {
-                            request = request.input(dp.paramsname, dp.paramsvalue);
                         }
+                        queryObj[dp.paramsname] = dp.paramsvalue;
                     });
-                    request.query(transParams.sql, (err, result) => {
-                        if (err) {
-                            transaction.rollback();
-                            resolve(false);
-                        } else {
-                            transaction.commit();
-                            resolve(result.rowsAffected[0] > 0);
-                        }
+                    this.connection.beginTransaction(err => {
+                        this.connection.query(transParams.sql, queryObj, (err, result) => {
+                            if (err) {
+                                this.connection.rollback();
+                                reject(err.message);
+                            } else {
+                                this.connection.commit();
+                                resolve(result.affectedRows > 0);
+                            }
+                        });
                     });
-                });
-            });
-            sql.on("error", err => { reject(err); });
+                }
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
@@ -183,10 +260,29 @@ class DataAccess {
     datapagerSql(pageno, pagesize, sqlstr, sp) {
         if (sqlstr) {
             if (pageno > 0 && pagesize > 0 && sp) {
-                return "select TMPTABLE2.* from (select TMPTABLE1.*,ROW_NUMBER() OVER(ORDER BY TMPTABLE1." + sp.Field + " " + sp.SortDirection + " ) ROWNUM_tmp from (" + sqlstr + ") TMPTABLE1) TMPTABLE2 where TMPTABLE2.ROWNUM_tmp between " + ((pageno - 1) * pagesize + 1).toString() + " and " + (pageno * pagesize).toString();
+                if (DbType === "MSSQL") {
+                    return "select TMPTABLE2.* from (select TMPTABLE1.*,ROW_NUMBER() OVER(ORDER BY TMPTABLE1." + sp.Field + " " + sp.SortDirection + " ) ROWNUM_tmp from (" + sqlstr + ") TMPTABLE1) TMPTABLE2 where TMPTABLE2.ROWNUM_tmp between " + ((pageno - 1) * pagesize + 1).toString() + " and " + (pageno * pagesize).toString();
+                } else if (DbType === "MYSQL") {
+                    return sqlstr + "order by " + sp.Field + " " + sp.SortDirection + " limit " + (pagesize * (pageno - 1)) + "," + pagesize;
+                }
             }
         }
         return sqlstr;
+    }
+
+    /**
+     * mysql参数化查询配置
+     * @param {*} query 
+     * @param {*} values 
+     */
+    mysqlQueryFormat(query, values) {
+        if (!values) return query;
+        return query.replace(/\@(\w+)/g, (txt, key) => {
+            if (values.hasOwnProperty(key)) {
+                return this.escape(values[key]);
+            }
+            return txt;
+        });
     }
 }
 
