@@ -1,4 +1,4 @@
 # git忽略规则
 
-
+/web.config.js
 /node_modules
