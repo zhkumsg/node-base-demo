@@ -37,6 +37,7 @@ class DataAccess {
                     global["globalConnection"].config.queryFormat = this.mysqlQueryFormat;
                     global["globalConnection"].on("error", err => {
                         if (err.code === "PROTOCOL_CONNECTION_LOST") {
+                            global["globalConnection"] = null;
                             this._constructor(config);
                         }
                     });
