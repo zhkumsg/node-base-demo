@@ -8,22 +8,29 @@ nodejs、express、sql server 2008r2、mysql
 
 #### 准备工作
 1. 在项目根目录创建web.config.js配置文件（[可从附件中下载模板](https://gitee.com/zhkumsg/node-base-demo/attach_files)），内容如下
-> module.exports = {
->     DbConnectionString: "mssql://sa:123456@127.0.0.1:1433/AuthPublish", //mssql连接字符串
->     MySqlConnectionCfg: {                                               //mysql连接配置 
->         host: "linux.msg.com",
->         user: '账号',
->         password: '密码',
->         port: '3306',
->         database: 'AuthPublish',
->         multipleStatements: true
->     },
->     DbType: "MYSQL",//MSSQL,MYSQL,ORACLE,ODBC...                         选用mysql数据库                   
->     TokenSecret: "msg is a handsome boy",                                //token私钥
->     HttpPort: 3000,                                                      //服务侦听端口
->     WebsocketPort: 5000                                                  //websock侦听端口  
-> };
-> 
+
+
+```
+module.exports = {
+  DbConnectionString: "mssql://账号:密码@ip地址:1433/数据库名",
+  MySqlConnectionCfg: {
+    host: "ip地址",
+    user: "账号",
+    password: "密码",
+    port: "3306",
+    database: "数据库名",
+    multipleStatements: true,
+    useConnectionPooling: true
+  },
+  DbType: "MYSQL", //MSSQL,MYSQL,ORACLE,ODBC...
+  TokenSecret: "msg is a handsome boy",
+  HttpPort: 3000,
+  WebsocketPort: 5000
+};
+```
+
+
+
 
 #### 安装教程
 
