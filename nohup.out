@@ -1,0 +1,5 @@
+
+> node-base-demo@0.0.0 start /www/node-base-demo
+> node ./bin/www
+
+Cannot enqueue Query after fatal error.

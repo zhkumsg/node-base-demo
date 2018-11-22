@@ -3,3 +3,4 @@
 /web.config.js
 /node_modules
 /logs
+./nohup.out
