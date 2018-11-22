@@ -1,31 +1,36 @@
-const MLogic = require("./MLogic");
+const { MLogic } = require("msg-dataaccess-base");
 
 //定义SubCondition实体类（子查询条件）
 const propertys = [
-    "toParentLogic",
-    "l_Condition" //为MemoryCondition数组
+  "toParentLogic",
+  "l_Condition" //为MemoryCondition数组
 ];
 
 class SubCondition {
-    constructor() {
-        propertys.forEach(name => { this[name] = undefined; });
-        this.set(arguments[0]);
-        if (this.toParentLogic === undefined) { this.toParentLogic = MLogic.And; }
-        if (this.l_Condition === undefined) { this.l_Condition = []; }
+  constructor() {
+    propertys.forEach(name => {
+      this[name] = undefined;
+    });
+    this.set(arguments[0]);
+    if (this.toParentLogic === undefined) {
+      this.toParentLogic = MLogic.And;
     }
-    get(key) {
-        return this[key];
+    if (this.l_Condition === undefined) {
+      this.l_Condition = [];
     }
-    set() {
-        if (typeof arguments[0] === "object") {
-            for (let name in arguments[0]) {
-                if (propertys.indexOf(name) > -1) {
-                    this[name] = arguments[0][name];
-                }
-            }
+  }
+  get(key) {
+    return this[key];
+  }
+  set() {
+    if (typeof arguments[0] === "object") {
+      for (let name in arguments[0]) {
+        if (propertys.indexOf(name) > -1) {
+          this[name] = arguments[0][name];
         }
+      }
     }
+  }
 }
-
 
 module.exports = SubCondition;
