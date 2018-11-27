@@ -40,6 +40,9 @@ router.get("/", function(req, res, next) {
 function Login(req, res) {
   let id = req.body.ID;
   let pwd = req.body.PWD;
+  if (!id || !pwd) {
+    return res.json(MsgJsonHelper.DebugJson("参数异常"));
+  }
   let condition = [];
   condition.push(
     new MemoryCondition({
