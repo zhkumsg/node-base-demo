@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-var request = require('request');
+const request = require('request');
+const WXBizDataCrypt = require('../common/WXBizDataCrypt');
 const MsgJsonHelper = require('../common/MsgJsonHelper');
 
 router.get('/authorize', authorize);
@@ -11,7 +12,19 @@ router.get('/authorize', authorize);
  * @param {*} res
  */
 function authorize(req, res) {
-	res.send('123');
+	let appid = '';
+	global['SYS_PARAMINFO'].forEach(permit => {
+		if (permit.ZK_KEY === 'WeiXinAppID') {
+			appid = permit.ZK_VALUE;
+		}
+	});
+	let iv = req.body.iv;
+	let sessionKey = req.body.sessionKey;
+	let encryptedData = req.body.encryptedData;
+	let pc = new WXBizDataCrypt(appid, sessionKey);
+	let wxuser = pc.decryptData(encryptedData, iv);
+	//检查是否存在该用户，判断是否需要注册
+	res.send(wxuser);
 }
 
 /**
@@ -24,8 +37,7 @@ function code2Session(req, res) {
 	let appid = '';
 	let secret = '';
 	let code = req.query['code'];
-	let paramsCache = global['SYS_PARAMINFO'];
-	paramsCache.forEach(permit => {
+	global['SYS_PARAMINFO'].forEach(permit => {
 		if (permit.ZK_KEY === 'WeiXinAppID') {
 			appid = permit.ZK_VALUE;
 		}
