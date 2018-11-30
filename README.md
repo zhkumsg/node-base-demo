@@ -37,6 +37,13 @@ module.exports = {
 1. npm install
 2. npm run dev
 
+#### shell 依赖
+
+1. cd ./shell                       (进入shell目录)
+2. pip install -r requirements.txt  (自动安装依赖)
+3. pip freeze > requirements.txt    (导出最新依赖)
+
+
 #### 使用说明
 
 1. [手摸手，教你用nodejs搭建后台最小系统（大量图文）系列一](https://www.jianshu.com/p/ebef9ffb7851)
