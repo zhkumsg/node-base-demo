@@ -3,6 +3,7 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
 var logger = require('morgan');
 var TokenHelper = require('./common/TokenHelper');
 
@@ -23,6 +24,8 @@ var FileStreamRotator = require('file-stream-rotator');
 
 var HttpLimitConn = require('./common/HttpLimitConn');
 var httpLimit = new HttpLimitConn({ limit: 120, space: '30 * * * * *' });
+
+var { HttpParamsLimit } = require('./web.config');
 
 //允许跨域(适合token方式，跨域无法携带cookie)
 app.all('*', function(req, res, next) {
@@ -80,6 +83,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 请求大小设置
+app.use(bodyParser.json({ limit: HttpParamsLimit }));
+app.use(bodyParser.urlencoded({ limit: HttpParamsLimit, extended: true }));
 
 //路由配置(写成.ashx是历史遗留问题)
 app.use('/Http/Msg/MsgStart.ashx', startRouter);
