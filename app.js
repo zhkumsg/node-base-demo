@@ -17,6 +17,7 @@ var paramPouter = require('./routes/param');
 var permitconfigRouter = require('./routes/permitconfig');
 var permitRouter = require('./routes/permit');
 var roleRouter = require('./routes/role');
+var xcxRouter = require('./routes/weixinxcx');
 
 var app = express();
 var fs = require('fs');
@@ -37,7 +38,7 @@ app.all('*', function(req, res, next) {
 	res.header('X-Powered-By', ' 3.2.1');
 	res.header('Content-Type', 'application/json;charset=utf-8');
 	if (!httpLimit.verifyClient(req)) {
-		return res.status(500).json({ flag: 'False', message: 'overflow limit' });
+		return res.status(403).json({ flag: 'False', message: 'overflow limit' });
 	}
 	if (req.headers['access-token'] && req.method.toLocaleUpperCase() !== 'OPTIONS') {
 		TokenHelper.get(req.headers['access-token'])
@@ -99,6 +100,7 @@ app.use('/Http/Msg/PermitconfigServer.ashx', permitconfigRouter);
 app.use('/Http/Msg/PermitServer.ashx', permitRouter);
 app.use('/Http/Msg/RoleServer.ashx', roleRouter);
 app.use('/Http/Msg/UserServer.ashx', usersRouter);
+app.use('/api/weixin', xcxRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
