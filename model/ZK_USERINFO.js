@@ -1,6 +1,7 @@
 //定义ZK_USERINFO实体类
 const propertys = [
   "ZK_ID",
+  "ZK_OPENID",
   "ZK_PASSWORD",
   "ZK_NAME",
   "ZK_SEX",

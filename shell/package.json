@@ -1,0 +1,13 @@
+{
+  "name": "reptile",
+  "version": "1.0.0",
+  "description": "爬取投资机构等信息",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "echo 请用python + 文件名执行",
+    "build":"echo 请用pyinstaller -F -i ico图标 python文件"
+  },
+  "author": "",
+  "license": "ISC"
+}
