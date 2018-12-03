@@ -8,9 +8,9 @@ const { MType, MLogic, MOperator } = require('msg-dataaccess-base');
 var svgCaptcha = require('svg-captcha');
 const jsmd5 = require('js-md5');
 var nodemailer = require('nodemailer');
-var AuthorizeLogin = require("../common/AuthorizeLogin");
+var AuthorizeLogin = require('../common/AuthorizeLogin');
 
-router.post('/', function (req, res, next) {
+router.post('/', function(req, res, next) {
 	switch (req.query['method']) {
 		case 'Backend_Login':
 			AuthorizeLogin.Login(req, res);
@@ -27,7 +27,7 @@ router.post('/', function (req, res, next) {
 	}
 });
 
-router.get('/', function (req, res, next) {
+router.get('/', function(req, res, next) {
 	switch (req.query['method']) {
 		case 'Backend_Verifylogin':
 			Verifylogin(req, res);

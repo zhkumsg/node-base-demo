@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const MySqlHelper = require('../common/MySqlHelper');
 const client = require('../common/ServiceClient');
 const MsgJsonHelper = require('../common/MsgJsonHelper');
 const QueryModel = require('../common/QueryModel');
@@ -15,7 +16,7 @@ const {
 	Public,
 } = require('msg-dataaccess-base');
 const Routebase = require('./route.base');
-const ZK_INVESTMENT = require('../model/ZK_INVESTMENT');
+const { ZK_NAVTREE } = require('../model/model.module');
 
 const ds = new DataAccess();
 
@@ -23,18 +24,15 @@ router.get('/', function(req, res, next) {
 	if (!Routebase.IsLogin(req, res)) {
 		return;
 	}
-	if (!Routebase.IsPermit(req, res, '00053')) {
+	if (!Routebase.IsPermit(req, res, '00032')) {
 		return;
 	}
 	switch (req.query['method']) {
-		case 'Backend_GetInvestmentList':
-			GetInvestmentList(req, res);
+		case 'Backend_GetNavtree':
+			GetNavtree(req, res);
 			break;
-		case 'Backend_GetInvestmentDetail':
-			GetInvestmentDetail(req, res);
-			break;
-		case 'Backend_DeleteInvestment':
-			DeleteInvestment(req, res);
+		case 'Backend_GetNavtreeDetail':
+			GetNavtreeDetail(req, res);
 			break;
 		default:
 			res.json(MsgJsonHelper.DebugJson('接口请求错误'));
@@ -46,15 +44,18 @@ router.post('/', function(req, res, next) {
 	if (!Routebase.IsLogin(req, res)) {
 		return;
 	}
-	if (!Routebase.IsPermit(req, res, '00053')) {
+	if (!Routebase.IsPermit(req, res, '00032')) {
 		return;
 	}
 	switch (req.query['method']) {
-		case 'Backend_DeleteInvestment':
-			DeleteInvestment(req, res);
+		case 'Backend_DeleteNavtree':
+			DeleteNavtree(req, res);
 			break;
-		case 'Backend_UpdateInvestment':
-			UpdateInvestment(req, res);
+		case 'Backend_InsertNavtree':
+			InsertNavtree(req, res);
+			break;
+		case 'Backend_UpdateNavtree':
+			UpdateNavtree(req, res);
 			break;
 		default:
 			res.json(MsgJsonHelper.DebugJson('接口请求错误'));
@@ -63,11 +64,11 @@ router.post('/', function(req, res, next) {
 });
 
 /**
- * 获取投融事件列表
+ * 获取导航树列表
  * @param {*} req
  * @param {*} res
  */
-function GetInvestmentList(req, res) {
+function GetNavtree(req, res) {
 	let keyword = req.query['KEYWORD'] === undefined ? '' : req.query['KEYWORD'].toString();
 	let type = req.query['TYPE'] === undefined ? '' : req.query['TYPE'].toString();
 	let prop = req.query['PROP'] === undefined ? '' : req.query['PROP'].toString();
@@ -100,7 +101,7 @@ function GetInvestmentList(req, res) {
 	}
 	client
 		.Query(
-			QueryModel.ZK_INVESTMENT,
+			QueryModel.ZK_NAVTREE,
 			condition,
 			null,
 			Number.parseInt(pagesize, 10),
@@ -116,16 +117,16 @@ function GetInvestmentList(req, res) {
 			}
 		})
 		.catch(err => {
-			res.json(MsgJsonHelper.DebugJson('GetInvestmentList接口请求异常'));
+			res.json(MsgJsonHelper.DebugJson('GetNavtree接口请求异常'));
 		});
 }
 
 /**
- * 获取投融事件详情
+ * 获取导航节点详情
  * @param {*} req
  * @param {*} res
  */
-function GetInvestmentDetail(req, res) {
+function GetNavtreeDetail(req, res) {
 	let id = req.query['UID'] === undefined ? '' : req.query['UID'].toString();
 	let condition = [];
 	condition.push(
@@ -138,7 +139,7 @@ function GetInvestmentDetail(req, res) {
 		})
 	);
 	client
-		.Query(QueryModel.ZK_INVESTMENT, condition, null, 0, 0, false, new SortParam())
+		.Query(QueryModel.ZK_NAVTREE, condition, null, 0, 0, false, new SortParam())
 		.then(m => {
 			if (m.result.length > 0) {
 				res.json(MsgJsonHelper.DefaultJson(m.result[0], true, m.recordcount.toString()));
@@ -147,54 +148,84 @@ function GetInvestmentDetail(req, res) {
 			}
 		})
 		.catch(err => {
-			res.json(MsgJsonHelper.DebugJson('GetInvestmentList接口请求异常'));
+			res.json(MsgJsonHelper.DebugJson('GetNavtreeDetail接口请求异常'));
 		});
 }
 
 /**
- * 删除投融事件
+ * 删除导航节点
  * @param {*} req
  * @param {*} res
  */
-function DeleteInvestment(req, res) {
+function DeleteNavtree(req, res) {
 	let ids = req.body['IDS'] === undefined ? '' : req.body['IDS'].toString();
-	client.DeleteByIds(ZK_INVESTMENT, ids.split(',')).then(m => {
-		if (m) {
-			res.json(MsgJsonHelper.DefaultJson(null, true, ''));
-		} else {
-			res.json(MsgJsonHelper.DebugJson('删除失败，请重新尝试'));
-		}
-	});
-}
-
-/**
- * 更新投融事件信息
- * @param {*} req
- * @param {*} res
- */
-function UpdateInvestment(req, res) {
-	let record = new ZK_INVESTMENT();
-	record.ZK_ID = req.body['ZK_ID'] || '';
-	record.ZK_LOGO = req.body['ZK_LOGO'] || '';
-	record.ZK_TITLE = req.body['ZK_TITLE'] || '';
-	record.ZK_INDUSTRY = req.body['ZK_INDUSTRY'] || '';
-	record.ZK_ROUNDS = req.body['ZK_ROUNDS'] || '';
-	record.ZK_MONEY = req.body['ZK_MONEY'] || '';
-	record.ZK_TIME = req.body['ZK_TIME'] || '';
-	record.ZK_INVESTORS = req.body['ZK_INVESTORS'] || '';
-	record.ZK_DESC = req.body['ZK_DESC'] || '';
-	record.EB_LASTMODIFYBY = req.UserInfo.ZK_ID;
-
-	ds.TransRunQuery(Public.OperationSQLParams(record, OperationEnum.UpdateNoCheck))
+	client
+		.DeleteByIds(ZK_NAVTREE, ids.split(','))
 		.then(m => {
 			if (m) {
 				res.json(MsgJsonHelper.DefaultJson(null, true, ''));
 			} else {
-				res.json(MsgJsonHelper.DebugJson('修改失败，请检查数据后重新提交'));
+				res.json(MsgJsonHelper.DebugJson('删除失败，请重新尝试'));
 			}
 		})
 		.catch(err => {
-			res.json(MsgJsonHelper.DebugJson('UpdateInvestment接口异常'));
+			res.json(MsgJsonHelper.DebugJson('DeleteNavtree接口请求异常'));
+		});
+}
+
+/**
+ * 新增导航树节点
+ * @param {*} req
+ * @param {*} res
+ */
+function InsertNavtree(req, res) {
+	let record = new ZK_NAVTREE();
+	record.EB_CREATEBY = req.UserInfo.ZK_ID;
+	record.EB_LASTMODIFYBY = req.UserInfo.ZK_ID;
+	record.ZK_ID = req.body['ZK_ID'] || '';
+	record.ZK_ISHIDDEN = req.body['ZK_ISHIDDEN'] || '';
+	record.ZK_ISLEAF = req.body['ZK_ISLEAF'] || '';
+	record.ZK_NAME = req.body['ZK_NAME'] || '';
+	record.ZK_PARENT = req.body['ZK_PARENT'] || '';
+	record.ZK_SORT = Number.parseInt(req.body['ZK_SORT'] || '0');
+	if (!/^[A-Za-z0-9]{1,32}$/g.test(record.ZK_ID)) {
+		res.json(MsgJsonHelper.DebugJson('键不符合规则，请重新输入'));
+		return false;
+	}
+	ds.TransRunQuery(Public.OperationSQLParams(record, OperationEnum.Create))
+		.then(flag => {
+			res.json(MsgJsonHelper.DefaultJson(null, flag, flag ? '保存成功' : '新增失败，请检查数据后重新提交'));
+		})
+		.catch(err => {
+			res.json(MsgJsonHelper.DebugJson('InsertNavtree接口请求异常'));
+		});
+}
+
+/**
+ * 更新导航树节点
+ * @param {*} req
+ * @param {*} res
+ */
+function UpdateNavtree(req, res) {
+	let record = new ZK_NAVTREE();
+	record.EB_CREATEBY = req.UserInfo.ZK_ID;
+	record.EB_LASTMODIFYBY = req.UserInfo.ZK_ID;
+	record.ZK_ID = req.body['ZK_ID'] || '';
+	record.ZK_ISHIDDEN = req.body['ZK_ISHIDDEN'] || '';
+	record.ZK_ISLEAF = req.body['ZK_ISLEAF'] || '';
+	record.ZK_NAME = req.body['ZK_NAME'] || '';
+	record.ZK_PARENT = req.body['ZK_PARENT'] || '';
+	record.ZK_SORT = Number.parseInt(req.body['ZK_SORT'] || '0');
+	if (!/^[A-Za-z0-9]{1,32}$/g.test(record.ZK_ID)) {
+		res.json(MsgJsonHelper.DebugJson('键不符合规则，请重新输入'));
+		return false;
+	}
+	ds.TransRunQuery(Public.OperationSQLParams(record, OperationEnum.UpdateNoCheck))
+		.then(flag => {
+			res.json(MsgJsonHelper.DefaultJson(null, flag, flag ? '保存成功' : '修改失败，请检查数据后重新提交'));
+		})
+		.catch(err => {
+			res.json(MsgJsonHelper.DebugJson('UpdateNavtree接口请求异常'));
 		});
 }
 

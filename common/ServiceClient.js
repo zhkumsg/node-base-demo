@@ -1,121 +1,130 @@
-const TableCfg = require("../table.config");
-const QueryModel = require("./QueryModel");
-const { Single } = require("msg-dataaccess-base");
+const TableCfg = require('../table.config');
+const QueryModel = require('./QueryModel');
+const { Single } = require('msg-dataaccess-base');
 
 const {
-  ZK_USERINFO,
-  ZK_PERMITINFO,
-  ZK_PERMITCONFIG,
-  ZK_ROLEINFO,
-  ZK_PARAMINFO,
-  ZK_INVESTOR,
-  ZK_INVESTOR_CASE,
-  ZK_INVESTOR_TEAM,
-  ZK_INVESTMENT
-} = require("../model/model.module");
+	ZK_USERINFO,
+	ZK_PERMITINFO,
+	ZK_PERMITCONFIG,
+	ZK_ROLEINFO,
+	ZK_PARAMINFO,
+	ZK_INVESTOR,
+	ZK_INVESTOR_CASE,
+	ZK_INVESTOR_TEAM,
+	ZK_INVESTMENT,
+	ZK_NAVTREE,
+	ZK_INFORMATION,
+} = require('../model/model.module');
 
 var ServiceClient = {
-  /**
-   * 通用查询
-   * @param {*} model 实体枚举
-   * @param {*} condition 条件
-   * @param {*} size 类型
-   * @param {*} pagesize 每页条数
-   * @param {*} pageno 页码
-   * @param {*} isPager 是否分页
-   * @param {SortParam} sp 排序
-   */
-  Query(model, condition, size, pagesize, pageno, isPager, sp) {
-    let result = new Array();
-    switch (model) {
-      case QueryModel.ZK_USERINFO:
-        result = this.getqueryPara(ZK_USERINFO);
-        break;
-      case QueryModel.ZK_PERMITINFO:
-        result = this.getqueryPara(ZK_PERMITINFO);
-        break;
-      case QueryModel.ZK_PERMITCONFIG:
-        result = this.getqueryPara(ZK_PERMITCONFIG);
-        break;
-      case QueryModel.ZK_ROLEINFO:
-        result = this.getqueryPara(ZK_ROLEINFO);
-        break;
-      case QueryModel.ZK_PARAMINFO:
-        result = this.getqueryPara(ZK_PARAMINFO);
-        break;
-      case QueryModel.ZK_INVESTOR:
-        result = this.getqueryPara(ZK_INVESTOR);
-        break;
-      case QueryModel.ZK_INVESTOR_CASE:
-        result = this.getqueryPara(ZK_INVESTOR_CASE);
-        break;
-      case QueryModel.ZK_INVESTOR_TEAM:
-        result = this.getqueryPara(ZK_INVESTOR_TEAM);
-        break;
-      case QueryModel.ZK_INVESTMENT:
-        result = this.getqueryPara(ZK_INVESTMENT);
-        break;
-    }
-    if (result.length > 0) {
-      return Single.query(
-        result[0],
-        condition,
-        size,
-        pagesize,
-        pageno,
-        isPager,
-        sp,
-        result[1]
-      );
-    } else {
-      return Promise.reject("实体枚举错误");
-    }
-  },
+	/**
+	 * 通用查询
+	 * @param {*} model 实体枚举
+	 * @param {*} condition 条件
+	 * @param {*} size 类型
+	 * @param {*} pagesize 每页条数
+	 * @param {*} pageno 页码
+	 * @param {*} isPager 是否分页
+	 * @param {SortParam} sp 排序
+	 */
+	Query(model, condition, size, pagesize, pageno, isPager, sp) {
+		let result = new Array();
+		switch (model) {
+			case QueryModel.ZK_USERINFO:
+				result = this.getqueryPara(ZK_USERINFO);
+				break;
+			case QueryModel.ZK_PERMITINFO:
+				result = this.getqueryPara(ZK_PERMITINFO);
+				break;
+			case QueryModel.ZK_PERMITCONFIG:
+				result = this.getqueryPara(ZK_PERMITCONFIG);
+				break;
+			case QueryModel.ZK_ROLEINFO:
+				result = this.getqueryPara(ZK_ROLEINFO);
+				break;
+			case QueryModel.ZK_PARAMINFO:
+				result = this.getqueryPara(ZK_PARAMINFO);
+				break;
+			case QueryModel.ZK_INVESTOR:
+				result = this.getqueryPara(ZK_INVESTOR);
+				break;
+			case QueryModel.ZK_INVESTOR_CASE:
+				result = this.getqueryPara(ZK_INVESTOR_CASE);
+				break;
+			case QueryModel.ZK_INVESTOR_TEAM:
+				result = this.getqueryPara(ZK_INVESTOR_TEAM);
+				break;
+			case QueryModel.ZK_INVESTMENT:
+				result = this.getqueryPara(ZK_INVESTMENT);
+				break;
+			case QueryModel.ZK_NAVTREE:
+				result = this.getqueryPara(ZK_NAVTREE);
+				break;
+			case QueryModel.BindNavtree:
+				return Single.querySQL(
+					'SELECT ZK_ID, ZK_NAME, ZK_ISLEAF, ZK_PARENT,ZK_SORT, ZK_ISHIDDEN FROM ZK_NAVTREE',
+					condition,
+					size,
+					pagesize,
+					pageno,
+					isPager,
+					sp
+				);
+				break;
+			case QueryModel.ZK_INFORMATION:
+				result = this.getqueryPara(ZK_INFORMATION);
+				break;
+			case QueryModel.ZK_INFORMATION_BASE:
+				return Single.querySQL(
+					'SELECT ZK_ID, ZK_TITLE, ZK_AUTHOR, ZK_PUBDATE, ZK_SORT, ZK_NAVID, ZK_COVERIMG, EB_LASTMODIFYBY, EB_LASTMODIFY_DATETIME FROM ZK_INFORMATION',
+					condition,
+					size,
+					pagesize,
+					pageno,
+					isPager,
+					sp
+				);
+				break;
+		}
+		if (result.length > 0) {
+			return Single.query(result[0], condition, size, pagesize, pageno, isPager, sp, result[1]);
+		} else {
+			return Promise.reject('实体枚举错误');
+		}
+	},
 
-  /**
-   * 读取配置文件，获取表名以和主键
-   * @param {*} m 实体类
-   */
-  getqueryPara(m) {
-    let result = new Array();
-    if (TableCfg[m.name] != undefined) {
-      result.push(TableCfg[m.name].name);
-      result.push(
-        Object.getOwnPropertyNames(new m()).indexOf("EB_ISDELETE") > -1
-          ? "false"
-          : null
-      );
-    }
-    return result;
-  },
+	/**
+	 * 读取配置文件，获取表名以和主键
+	 * @param {*} m 实体类
+	 */
+	getqueryPara(m) {
+		let result = new Array();
+		if (TableCfg[m.name] != undefined) {
+			result.push(TableCfg[m.name].name);
+			result.push(Object.getOwnPropertyNames(new m()).indexOf('EB_ISDELETE') > -1 ? 'false' : null);
+		}
+		return result;
+	},
 
-  /**
-   * 通过主键快速删除
-   * @param {*} model 实体类（非枚举）
-   * @param {Array} ids 主键数组/主键字符串
-   * @param {boolean} flag 是否物理删除（默认逻辑删除）
-   */
-  DeleteByIds(model, ids, flag) {
-    let result = this.getqueryPara(model);
-    if (result.length === 0) {
-      return Promise.reject("实体错误");
-    }
-    let sqlstr = "";
-    if (flag !== true && result[1] === "false") {
-      sqlstr =
-        "UPDATE " +
-        TableCfg[model.name].name +
-        " SET EB_ISDELETE = '1' WHERE " +
-        TableCfg[model.name].pk;
-    } else {
-      sqlstr =
-        "DELETE FROM " +
-        TableCfg[model.name].name +
-        " WHERE " +
-        TableCfg[model.name].pk;
-    }
-    return Single.DeleteByIds(sqlstr, ids);
-  }
+	/**
+	 * 通过主键快速删除
+	 * @param {*} model 实体类（非枚举）
+	 * @param {Array} ids 主键数组/主键字符串
+	 * @param {boolean} flag 是否物理删除（默认逻辑删除）
+	 */
+	DeleteByIds(model, ids, flag) {
+		let result = this.getqueryPara(model);
+		if (result.length === 0) {
+			return Promise.reject('实体错误');
+		}
+		let sqlstr = '';
+		if (flag !== true && result[1] === 'false') {
+			sqlstr = 'UPDATE ' + TableCfg[model.name].name + " SET EB_ISDELETE = '1' WHERE " + TableCfg[model.name].pk;
+		} else {
+			sqlstr = 'DELETE FROM ' + TableCfg[model.name].name + ' WHERE ' + TableCfg[model.name].pk;
+		}
+		return Single.DeleteByIds(sqlstr, ids);
+	},
 };
 
 module.exports = ServiceClient;
