@@ -5,6 +5,7 @@ const propertys = [
 	'ZK_PARENT',
 	'ZK_SORT',
 	'ZK_ISHIDDEN',
+	'EB_ISDELETE',
 	'EB_CREATE_DATETIME',
 	'EB_CREATEBY',
 	'EB_LASTMODIFYBY',

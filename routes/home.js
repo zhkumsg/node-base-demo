@@ -24,6 +24,9 @@ router.get('/', function(req, res, next) {
 		case 'Backend_BindRoleList':
 			BindRoleList(req, res);
 			break;
+		case 'Backend_BindNavtree':
+			BindNavtree();
+			break;
 		default:
 			res.json(MsgJsonHelper.DebugJson('接口请求错误'));
 			break;
@@ -86,6 +89,36 @@ function BindRoleList(req, res) {
 		})
 		.catch(err => {
 			res.json(MsgJsonHelper.DebugJson('BindRoleList接口请求异常'));
+		});
+}
+
+/**
+ * 获取文章目录树（导航用）
+ * @param {*} req
+ * @param {*} res
+ */
+function BindNavtree(req, res) {
+	let condition = [];
+	condition.push(
+		new MemoryCondition({
+			Field: 'EB_ISDELETE',
+			Logic: MLogic.And,
+			Operator: MOperator.In,
+			Type: MType.Mstring,
+			value: '0',
+		})
+	);
+	client
+		.Query(QueryModel.BindNavtree, condition, null, 0, 0, false, null)
+		.then(m => {
+			if (m.result.length === 0) {
+				res.json(MsgJsonHelper.DebugJson('暂无数据'));
+			} else {
+				res.json(MsgJsonHelper.DefaultJson(m.result, true, ''));
+			}
+		})
+		.catch(err => {
+			res.json(MsgJsonHelper.DebugJson('BindNavtree接口请求异常'));
 		});
 }
 

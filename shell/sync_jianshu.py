@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -12,7 +14,7 @@ headers = {
 
 
 def getList(pageno):
-    print("\n----------获取第" + str(pageno) + "页数据----------\n")
+    print("\n----------page：" + str(pageno) + "----------\n")
     r = requests.get(userurl+"?order_by=shared_at&page=" +
                      str(pageno), headers=headers)
     soup = BeautifulSoup(r.text, "html.parser")
@@ -34,8 +36,8 @@ def getList(pageno):
             "href": "https://www.jianshu.com" + item.find("a", class_="title")["href"]
         }
         getDetail(obj)
-    # if(total > 0):
-    #     getList(pageno + 1)
+    if(total > 0):
+        getList(pageno + 1)
 
 
 # 获取文章详情
@@ -44,7 +46,7 @@ def getDetail(obj):
     soup = BeautifulSoup(r.text, "html.parser")
     article = soup.find("div", class_="article")
     obj["desc"] = str(article.find("div", class_="show-content-free"))
-    print(obj["desc"])
+    print(obj["desc"].replace(u'\xa0', u''))
     leadingin(obj)
 
 

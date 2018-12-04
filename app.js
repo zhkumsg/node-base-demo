@@ -17,6 +17,8 @@ var paramPouter = require('./routes/param');
 var permitconfigRouter = require('./routes/permitconfig');
 var permitRouter = require('./routes/permit');
 var roleRouter = require('./routes/role');
+var navtreeRouter = require('./routes/navtree');
+var informationRouter = require('./routes/information');
 var xcxRouter = require('./routes/weixinxcx');
 
 var app = express();
@@ -100,6 +102,8 @@ app.use('/Http/Msg/PermitconfigServer.ashx', permitconfigRouter);
 app.use('/Http/Msg/PermitServer.ashx', permitRouter);
 app.use('/Http/Msg/RoleServer.ashx', roleRouter);
 app.use('/Http/Msg/UserServer.ashx', usersRouter);
+app.use('/Http/Msg/NavtreeServer.ashx', navtreeRouter);
+app.use('/Http/Msg/InformationServer.ashx', informationRouter);
 app.use('/api/weixin', xcxRouter);
 
 // catch 404 and forward to error handler
