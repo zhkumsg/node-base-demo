@@ -80,6 +80,9 @@ function GetInfotmationList(req, res) {
 	let pagesize = req.query['PAGESIZE'] === undefined ? '1' : req.query['PAGESIZE'].toString();
 	let pageno = req.query['PAGENO'] === undefined ? '1' : req.query['PAGENO'].toString();
 	let sort = null;
+	if (!navid) {
+		return res.json(MsgJsonHelper.DebugJson('参数异常'));
+	}
 	let condition = [];
 	condition.push(
 		new MemoryCondition({
@@ -88,6 +91,15 @@ function GetInfotmationList(req, res) {
 			Operator: MOperator.Equal,
 			Type: MType.Mstring,
 			value: navid,
+		})
+	);
+	condition.push(
+		new MemoryCondition({
+			Field: 'EB_ISDELETE',
+			Logic: MLogic.And,
+			Operator: MOperator.Equal,
+			Type: MType.Mstring,
+			value: '0',
 		})
 	);
 	if (keyword) {
@@ -212,6 +224,7 @@ function InsertInformation(req, res) {
 	record.ZK_SORT = Number.parseInt(req.body['ZK_SORT'] || '0');
 	record.ZK_TITLE = req.body['ZK_TITLE'] || '';
 	record.ZK_DESC = req.body['ZK_DESC'] || '';
+	record.EB_ISDELETE = '0';
 	record.ZK_ID = Public.BuildCode();
 	ds.TransRunQuery(Public.OperationSQLParams(record, OperationEnum.Create))
 		.then(flag => {

@@ -188,6 +188,7 @@ function InsertNavtree(req, res) {
 	record.ZK_NAME = req.body['ZK_NAME'] || '';
 	record.ZK_PARENT = req.body['ZK_PARENT'] || '';
 	record.ZK_SORT = Number.parseInt(req.body['ZK_SORT'] || '0');
+	record.EB_ISDELETE = '0';
 	if (!/^[A-Za-z0-9]{1,32}$/g.test(record.ZK_ID)) {
 		res.json(MsgJsonHelper.DebugJson('键不符合规则，请重新输入'));
 		return false;

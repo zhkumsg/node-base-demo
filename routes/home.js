@@ -25,7 +25,7 @@ router.get('/', function(req, res, next) {
 			BindRoleList(req, res);
 			break;
 		case 'Backend_BindNavtree':
-			BindNavtree();
+			BindNavtree(req, res);
 			break;
 		default:
 			res.json(MsgJsonHelper.DebugJson('接口请求错误'));
