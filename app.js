@@ -51,12 +51,16 @@ app.all('*', function(req, res, next) {
 				if (user && !/logout/gi.test(req.url)) {
 					res.header('access-token', TokenHelper.set(user));
 				}
-				TokenHelper.get(req.headers['permit-token']).then(permit => {
-					delete permit.iat;
-					delete permit.exp;
-					req['UserPermit'] = permit;
-					next();
-				});
+				TokenHelper.get(req.headers['permit-token'])
+					.then(permit => {
+						delete permit.iat;
+						delete permit.exp;
+						req['UserPermit'] = permit;
+						next();
+					})
+					.catch(() => {
+						next();
+					});
 			})
 			.catch(() => {
 				next();
