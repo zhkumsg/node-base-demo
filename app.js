@@ -20,6 +20,7 @@ var roleRouter = require('./routes/role');
 var navtreeRouter = require('./routes/navtree');
 var informationRouter = require('./routes/information');
 var xcxRouter = require('./routes/weixinxcx');
+var leadinginRouter = require('./routes/leadingin');
 
 var app = express();
 var fs = require('fs');
@@ -109,7 +110,7 @@ app.use('/Http/Msg/UserServer.ashx', usersRouter);
 app.use('/Http/Msg/NavtreeServer.ashx', navtreeRouter);
 app.use('/Http/Msg/InformationServer.ashx', informationRouter);
 app.use('/api/weixin', xcxRouter);
-
+app.use('/api/leadingin', leadinginRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
 	next(createError(404));
