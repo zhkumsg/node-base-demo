@@ -255,8 +255,108 @@ express默认是不支持热更新的，这里使用了nodemon模块实现热更
 
 ----
 ## 使用说明
+### 如何使用通用查询？
+通用查询使用common/ServiceClient，比如需要`超找全部`的用户信息（单表），我们可以这样执行下面的代码
+``` js
+const client = require('@/common/ServiceClient');
+const QueryModel = require('@/common/QueryModel');
+
+client.Query(
+    QueryModel.ZK_USERINFO, //查询枚举
+    [], //查询条件
+    null, //类型
+    0, //pagesize
+    0, //pageno
+    false, //是否分页
+    null //排序类型
+).then(m => {
+    console.log(m); //结果
+}).catch(err => {
+    //todo
+});
+```
+如果需要查询需要`匹配特定信息`，如账号为admin的用户，我们需要加上MemoryCondition条件实体类作为Query的第二个参数，如下
+``` js
+const MemoryCondition = require('@/common/MemoryCondition');
+const {MType, MLogic, MOperator} = require('msg-dataaccess-base');
+
+let condition = [];
+condition.push(new MemoryCondition({
+	Field: 'ZK_ID',
+	Logic: MLogic.And,
+	Operator: MOperator.In,
+	Type: MType.Mstring,
+	value: 'admin'
+}));
+client.Query(
+    QueryModel.ZK_USERINFO, 
+    condition,
+    ...
+).then(m => {
+    //todo
+});
+```
+这是如果需要排序，我们可以再添加一个SortParam对象作为Query的最后一个参数，如按照创建时间`降序排列`，如下
+``` js
+const {..., SortParam, Direction} = require('msg-dataaccess-base');
 
 ...
+let sort = new SortParam({
+	Field: 'EB_CREATE_DATETIME',
+	SortDirection: Direction.DESC
+});
+client.Query(
+    ...,
+    sort
+).then(m => {
+    //todo
+});
+```
+更多情况下，我们需要服务端进行`分页处理`获取列表，这时候我们就需要配置Query的4/5/6个参数了，如希望一页15条数据而且获取第一页的数据，那么代码如下
+``` js
+...
+client.Query(
+    ...,
+    15,
+    1,
+    true
+    ...
+).then(m => {
+    //todo
+});
+```
+在逻辑较复杂的情况下，我们往往需要做联表操作，这时候我们需要带通用查询中添加一条带join的基础语句case，这里不做详细展开，具体可看源码。
+
+### 如何自动执行增删改？
+处理快速的通用查询外，我们还有快速执行单表的增删改方法，我们需要调用`Public.OperationSQLParams`方法把实体类转换成sql语句和参数，再调用底层的TransRunQuery实现操作，如我们要新增一个用户，快速操作如下
+``` js
+const ZK_USERINFO = require('@/model/ZK_USERINFO');
+const {DataAccess, Public, OperationEnum} = require('msg-dataaccess-base');
+const ds = new DataAccess();
+
+let user = new ZK_USERINFO({ ... });
+ds.TransRunQuery(Public.OperationSQLParams(user, OperationEnum.Create)).then(flag => {
+    console.log(flag); //操作结果
+}).catch(err => {
+    //todo
+});
+```
+* `OperationEnum.Create`：新增  
+* `OperationEnum.Delete`：更新（不常用）  
+* `OperationEnum.Update`：更新（检测最后修改时间）  
+* `OperationEnum.UpdateNoCheck`：更新（不检测修改时间）  
+
+当然不同业务使用不同枚举即可实现，需要注意的是实体类的相关参数需要补充完成，如新增和删除时主键不为空，更新时会检测最后修改时间是否有效。  
+
+除了单个实体类的外，`Public.OperationSQLParams`还支持数组的转换，如批量新增，只需要把第一个参数换成数组即可，如
+``` js
+ds.TransRunQuery(Public.OperationSQLParams([user],...));
+```
+
+### 如何自定义查询？
+### 如何自定义增删改？
+### 如何删除数据？
+### 增加一个表后如何配置？
 
 ----
 ## shell脚本
