@@ -1,7 +1,90 @@
 # node-base-demo
+![alt nodejs](https://ss1.baidu.com/6ONXsjip0QIZ8tyhnq/it/u=1841004364,244945169&fm=58&bpow=121&bpoh=75)  
+
+![alt express](https://camo.githubusercontent.com/fc61dcbdb7a6e49d3adecc12194b24ab20dfa25b/68747470733a2f2f692e636c6f756475702e636f6d2f7a6659366c4c376546612d3330303078333030302e706e67)
 
 #### 项目介绍
-手摸手，教你用nodejs搭建后台最小系统
+##### 手摸手，教你用nodejs搭建后台最小系统
+基于node express框架，采用三层模式开发，具备用户管理、权限管理、文章系统、日志等常见模块，可快速拓展并适用于各种业务场景，如企业官网、管理系统、个人博客以及微信开发等。  
+
+数据库可适配mssql和mysql（后续添加oracle、mongodb等），只需简单配置连接参数，无需手动拼接sql语句，自动按照业务逻辑实现数据库操作 *[msg-dataassess-base](https://www.npmjs.com/package/msg-dataaccess-base)*。
+
+服务可部署在linux或window服务器上，为了规避http攻击，可配置http连接数限制，默认120条/分钟，相关请求会自动保存到logs日志中。
+
+与前端框架无缝对接，采用token替代session，前端可以使用vue、react、angular、jq等主流框架  
+* vue [https://gitee.com/zhkumsg/vue-base-demo](https://gitee.com/zhkumsg/vue-base-demo)
+* react [https://gitee.com/zhkumsg/react-base-demo](https://gitee.com/zhkumsg/react-base-demo)
+
+
+#### 目录结构
+```
++-- bin
+|   +-- www                     底层启动文件
++-- common
+|   +-- AuthorizeLogin.js       授权相关
+|   +-- HttpLimitConn.js        http拦截相关
+|   +-- JsonCodeEnum.js         返回信息枚举
+|   +-- MemoryCondition.js      查询条件
+|   +-- MemoryResult.js         查询结果
+|   +-- MsgJsonHelper.js        http响应帮助类
+|   +-- QueryModel.js           通用查询枚举
+|   +-- ServiceClient.js        通用查询实例
+|   +-- SubCondition.js         子查询条件
+|   +-- TokenHelper.js          token相关
+|   +-- WXBizDataCrypt.js       微信小程序解密
++-- logs
+|   +-- access-{date}.log       日志
++-- model                       实体类
+|   +-- model.module.js         
+|   +-- ZK_INFORMATION.js       文章
+|   +-- ZK_INVESTMENT.js        投融事件
+|   +-- ZK_INVESTOR_CASE.js     投资机构
+|   +-- ZK_INVESTOR_TEAM.js     投资团队
+|   +-- ZK_INVESTOR.js          投资人
+|   +-- ZK_NAVTREE.js           导航
+|   +-- ZK_PARAMINFO.js         系统参数
+|   +-- ZK_PERMITCONFIG.js      权限配置
+|   +-- ZK_PERMITINFO.js        权限
+|   +-- ZK_ROLEINFO.js          角色
+|   +-- ZK_USERINFO.js          用户
++-- public                      资源
+|   |-- stylesheets
+|   |   +-- style.css           css样式
++-- routes                      路由
+|   +-- home.js                 首页路由
+|   +-- information.js          文章路由
+|   +-- investment.js           投资事件路由
+|   +-- investor.js             投资人路由
+|   +-- leadingin.js            导入路由
+|   +-- main.js                 控制台路由
+|   +-- navtree.js              导航树路由
+|   +-- param.js                系统参数路由
+|   +-- permit.js               权限路由
+|   +-- permitconfig.js         权限配置路由
+|   +-- role.js                 角色路由
+|   +-- route.base.js           路由中间件
+|   +-- start.js                入口路由
+|   +-- users.js                用户路由
+|   +-- weixinxcx.js            微信小程序路由
++-- shell
+|   +-- dictionary_common.txt   天朝常见网站弱口令字典
+|   +-- login_hack.py           登录破解
+|   +-- investor.ico            exe图标
+|   +-- requirements.txt        python包依赖
+|   +-- sync_jianshu.py         同步简书文章
+|   +-- vc.investor.py          爬取投资人
+|   +-- vc.project.py           爬取投资机构
++-- views
+|   +-- error.html              错误页
+|   +-- index.html              首页
+|-- app.js                      express程序入口
+|-- package.json
+|-- table.config.js             数据库表映射配置
+|-- web.config.js               系统配置参数
+|-- web.global.js               系统全局配置
+```
+
+1. 
 
 #### 软件架构
 nodejs、express、sql server 2008r2、mysql
