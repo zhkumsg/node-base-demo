@@ -9,7 +9,6 @@ const propertys = [
   "ZK_EMAIL",
   "ZK_ROLE",
   "ZK_DEPARTMENT",
-  "ZK_ISHANDLER",
   "ZK_REMARK",
   "ZK_HEAD_PORTRAIT",
   "ZK_USERSOURCE",
