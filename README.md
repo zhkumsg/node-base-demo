@@ -7,7 +7,7 @@
 ##### 手摸手，教你用nodejs搭建后台最小系统
 基于node express框架，采用三层模式开发，具备用户管理、权限管理、文章系统、日志等常见模块，可快速拓展并适用于各种业务场景，如企业官网、管理系统、个人博客以及微信开发等。  
 
-数据库可适配mssql和mysql（后续添加oracle、mongodb等），只需简单配置连接参数，无需手动拼接sql语句，自动按照业务逻辑实现数据库操作 *[msg-dataassess-base](https://www.npmjs.com/package/msg-dataaccess-base)*。
+数据库可适配mssql和mysql（后续添加oracle、mongodb等），只需简单配置连接参数，无需手动拼接sql语句，自动按照业务逻辑实现数据库操作 *[msg-dataassess-base](https://www.npmjs.com/package/msg-dataaccess-base)*（已发布到npm）。
 
 服务可部署在linux或window服务器上，为了规避http攻击，可配置http连接数限制，默认120条/分钟，相关请求会自动保存到logs日志中。
 
@@ -256,7 +256,7 @@ express默认是不支持热更新的，这里使用了nodemon模块实现热更
 ----
 ## 使用说明
 ### 如何使用通用查询？
-通用查询使用common/ServiceClient，比如需要`超找全部`的用户信息（单表），我们可以这样执行下面的代码
+通用查询使用common/ServiceClient，比如需要`查找全部`的用户信息（单表），我们可以这样执行下面的代码
 ``` js
 const client = require('@/common/ServiceClient');
 const QueryModel = require('@/common/QueryModel');
@@ -328,7 +328,7 @@ client.Query(
 在逻辑较复杂的情况下，我们往往需要做联表操作，这时候我们需要带通用查询中添加一条带join的基础语句case，这里不做详细展开，具体可看源码。
 
 ### 如何自动执行增删改？
-处理快速的通用查询外，我们还有快速执行单表的增删改方法，我们需要调用`Public.OperationSQLParams`方法把实体类转换成sql语句和参数，再调用底层的TransRunQuery实现操作，如我们要新增一个用户，快速操作如下
+除了快速的通用查询外，我们还有快速执行单表的增删改方法，我们需要调用`Public.OperationSQLParams`方法把实体类转换成sql语句和参数，使用`OperationEnum`枚举选择操作类型，再调用底层的TransRunQuery实现操作，如我们要新增一个用户，快速操作如下
 ``` js
 const ZK_USERINFO = require('@/model/ZK_USERINFO');
 const {DataAccess, Public, OperationEnum} = require('msg-dataaccess-base');
@@ -354,13 +354,157 @@ ds.TransRunQuery(Public.OperationSQLParams([user],...));
 ```
 
 ### 如何自定义查询？
+如果普通的通用查询无法满足要求，我们也提供了原生的查询方式，这里需要调用DataAccess实例下的GetTable方法，如希望获取前10条用户信息（SQL servr），我们可以这样用
+``` js
+const {DataAccess} = require('msg-dataaccess-base');
+const ds = new DataAccess();
+
+ds.GetTable("select top 10 * from zk_userinfo").then(table => {
+    console.log(table)
+});
+```
 ### 如何自定义增删改？
+如果快速操作无法满足业务需求，我们也提供了原生的增删改方法，这里需要调用DataAccess实例下的RunQuery方法，如希望更新一条用户信息，如下
+``` js
+const {DataAccess} = require('msg-dataaccess-base');
+const ds = new DataAccess();
+
+ds.RunQuery("update zk_userinfo set zk_name = 'abc' where zk_id='admin'").then(flag => {
+    console.log(flag)
+});
+```
+切记update和delete需要加`匹配参数`，避免`删库`到跑路
 ### 如何删除数据？
+如果需要删除一条记录，前面也提到两种方式
+* 使用ds.TransRunQuery
+* 使用ds.RunQuery  
+
+除此之外，我们还可以使用ServiceClient实例下的`DeleteByIds`方法，它接受三个参数，分别是实体类型、主键/主键数组、是否物理删除（默认false，逻辑删除），如需要删除id为admin的用户，操作如下，
+``` js
+const client = require('@/common/ServiceClient');
+const ZK_USERINFO = require('@/model/ZK_USERINFO');
+
+client.DeleteByIds(ZK_USERINFO, "admin").then(flag => {
+    console.log(flag)
+})
+```
+主键参数还可以接受数组，如`['admin']`  
+
+逻辑删除与物理删除的区别在于是否把数据真正从数据库中删除，逻辑删除是把`EB_ISDELETE`字段置为1，底层查询时会自动过滤EB_ISDELETE等于1的记录；物理删除是把数据从数据库中清除，无法恢复。 
+
+### 如何使用参数化查询？
+为了避免sql注入攻击，如果适用自定义查询的时候，可以用DataAccess实例下的parse方法过滤参数，如：
+``` js
+let id = ...;
+let sqlstr = "select * from zk_userinfo where zk_id = '" + ds.parse(id) + "'";
+```
+如果适用的是快速操作，默认情况下是适用参数化查询
+### 如何开启事务？
+默认均`已开启`事务操作（除了mysql）
 ### 增加一个表后如何配置？
+如果业务变动，新增了一个表，如课程表ZK_COURSE（假设主键为ZK_ID），那么在数据库新增完表后，我们需在在代码中做以下操作  
+
+1. table.config.js 下增加ZK_COURSE节点
+``` js
+ZK_COURSE: {//节点名
+	name: 'ZK_COURSE',//表名
+	pk: 'ZK_ID',//主键名
+}
+```
+2. model/ 下新建ZK_COURSE实体类
+``` js
+const propertys = [
+    'ZK_ID',
+    ...
+];
+
+class ZK_COURSE {
+	constructor() {
+		propertys.forEach(name => {
+			this[name] = undefined;
+		});
+		this.set(arguments[0]);
+	}
+	get(key) {
+		...
+	}
+	set() {
+        ...
+	}
+}
+
+module.exports = ZK_COURSE;
+```
+3. common/QueryModel.js 下增加ZK_COURSE枚举
+``` js
+ZK_COURSE: 'ZK_COURSE'
+```
+4. common/ServiceClient.js 下添加case
+``` js
+const ZK_COURSE = require('@/model/ZK_COURSE');
+...
+case QueryModel.ZK_COURSE: result = this.getqueryPara(ZK_COURSE); break;
+```
+如果希望实现复杂查询，如希望课程表与用户表联表查询，可以做如下修改
+``` js
+case QueryModel.ZK_COURSE: 
+    return Single.querySQL('select * from zk_course T1 left join zk_userinfo T2 on T1.ZK_ID = T2.ZK_ID', condition, size, pagesize, pageno, isPager, sp); 
+    break;
+```
+连表sql参考
+``` sql
+select * from zk_course T1 left join zk_userinfo T2 on T1.ZK_ID = T2.ZK_ID
+```
+### 如何登陆及判断权限？
+在web开发中，用户身份很重要，我们往往是通过session来保存用户信息和登陆状态的，但是在前后端分离的情况下，请求会存在跨域，所以我们采用token的形式来实现保存登陆状态。  
+
+在用户登陆后，会返回access_token和permit_token两个参数，前端需要自行缓存，然后在后续的每一个请求中携带在请求头中，同时正常响应时，响应头中也会返回最新的access_token，避免登陆超时，下面是具体流程：  
+
+1. 发起login请求  
+``` json
+{
+    "ID": "账号",
+    "PWD": "密码",
+    "CAPTCHA": "验证码",
+    "_CAPTCHA": "验证码密文"
+}
+```
+* 密码需要使用md5加密
+* _CAPTCHA为调用`/Http/Msg/MsgStart.ashx？method=Backend_Captcha`获取图片验证码后返回的密文  
+2. 登陆成功返回token
+``` json
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJaS19JRCI6ImFkbWluIiwiWktfT1BFTklEI....",
+    "permit_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3NlbGZfXyI6W3siWktfSUQiOiIwMDgxM...."
+}
+```
+3. 前端缓存token
+``` js
+//localStorage
+//sessionStorage
+```
+4. 发起请求时请求头携带token
+``` json
+headers: {
+    "Access-Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJaS19JRCI6ImFkbWluIiwiWktfT1BFTklEI....",
+    "Permit-Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3NlbGZfXyI6W3siWktfSUQiOiIwMDgxM...." 
+}
+```
+5. 响应时更新token
+``` js
+//response.headers中返回最新的access_token
+//缓存
+```
+### 如何设置http连接限制？
+为了避免网站被攻击，如暴力破解登陆，我们增加了http连接限制，默认情况下是同ip1分钟最多连接120次  
+``` js
+var httpLimit = new HttpLimitConn({ limit: 120, space: '30 * * * * *' });
+```
+如果需要更改，需要把app.js下的HttpLimitConn实例修改即可，`limit`代表次数，`space`代表间隔，`30 * * * * *`的意思的每分钟的第30秒为分界
 
 ----
 ## shell脚本
-
+* python
 1. cd ./shell                       (进入shell目录)
 2. pip install -r requirements.txt  (自动安装依赖)
 3. pip freeze > requirements.txt    (导出最新依赖)
@@ -369,111 +513,55 @@ ds.TransRunQuery(Public.OperationSQLParams([user],...));
 ----
 ## 接口文档
 
-## 环境域名
+### 环境域名
 协议: `http`
 
-* 正式域名: `*.ijunhai.com`
-* 预发布域名： `*.ijunhai.com`
-* 测试域名: `*.ijunhai.com`
+* 正式域名: `*.*.com`
+* 预发布域名： `*.*.com`
+* 测试域名： `localhost:3000`
 
-## 接口列表
+### 接口介绍
 
-### 用户列表接口
+* 请求方式: POST / GET / OPTION
 
-* 功能描述：
+* 请求头: `application/x-www-form-urlencoded`
 
-```
-该接口用于获取所有用户列表
-```
+* 路径: `xxx/xxx`
 
-* 请求方式: POST / GET
-
-* 请求头: `application/json`
-
-* 路径: `api/getAllUserRoles`
-
-* 参数列表:
-
-| 参数名称  |   参数说明  |  备注 | 类型|
-|:-------:|:----------:|:------:|:------:|
-|  page_size  |   分页大小   |   非必填 缺省值为10     | 整型
-|  page   |   页数     |     非必填 缺省值为1   | 整型
-
-
-* 响应
-
-成功响应:
-
+* 成功响应:  
 ```json
 {
-    "code": 200,//返回结果码
-    "message": "success",//返回的结果信息
-    "content": {
-            "current_page" : 2,//当前页数
-            "data": [
-                  {
-                       "id": 10,//用户id
-                       "user_id": 1000,//单点登陆用户id
-                       "user_name": "xxxx",//用户名
-                       "real_name": "xxxx",//真名
-                       "status": 1,//用户状态
-                       "email": "",//用户邮箱
-                       "last_login_ip": "",//最后登陆
-                       "last_login_at": "2018-09-10 02:31:43",//最后登陆时间
-                       "tel": "",//用户电话
-                       "create_time": "2018-09-10 02:31:43",//创建时间
-                       "update_time": "2018-09-10 02:31:43",//更新时间
-                       "role": [
-                              {
-                                        "id": 4,//角色id
-                                        "role_name": "channel",//角色名
-                                        "description": "渠道",//角色描述
-                                        "status": 1,//角色状态
-                                        "create_time": "2018-08-01 08:50:21",//创建时间
-                                        "update_time": "2018-08-01 08:50:21",//更新时间
-                                        "pivot": {
-                                                 "user_id": 10,
-                                                 "role_id": 4
-                                        }
-                              }
-                       ]
-                  },
-               "......"
-            ],
-    "first_page_url" : "http://cloud-dist.test/api/getAllUserRoles?page=1",//首页地址
-    "from" : 4, //起始位置
-    "last_page" : 3,
-    "last_page_url" : "http://cloud-dist.test/api/getAllUserRoles?page=3",//最后一页   
-    "next_page_url": "http://cloud-dist.test/api/getAllUserRoles?page=3",//下一页地址
-    "path": "http://cloud-dist.test/api/getAllUserRoles",//请求地址
-    "per_page": 3,//页面大小
-    "prev_page_url": "http://cloud-dist.test/api/getAllUserRoles?page=1",//上一页地址
-    "to": 6,//终止位置
-    "total": 7 //数据总述      
-    }
+    "code": -1,
+    "flag": "True",
+    "message": "",
+    "result": ...
 }
 ```
 
-失败响应:
+* 失败响应:
 
 ```json
 {
-    "message": "422 Unprocessable Entity",//错误信息
-     "errors": {
-            "page_size": [ //错误参数
-                "分页大小 不能为空。" //错误原因
-            ]
-        },
-     "status_code": 422 //错误响应状态码
+    "code": 0,
+    "flag": "False",
+    "message": "...",
+    "result": null
 }
+```
+* code类型：
+``` js
+  Normal: -1, //正常
+  Error: 0, //错误警告
+  Timeout: 1, //登录超时
+  Nopermit: 2 //无权限
 ```
 
 ----
 ## 参考链接
-1. [手摸手，教你用nodejs搭建后台最小系统（大量图文）系列一](https://www.jianshu.com/p/ebef9ffb7851)
-2. [手摸手，教你用nodejs搭建后台最小系统（大量图文）系列二](https://www.jianshu.com/p/60d6dc2d901a)
-3. [数据库结构与数据脚本](https://gitee.com/zhkumsg/node-base-demo/attach_files)
-4. [vue管理系统](https://gitee.com/zhkumsg/vue-base-demo)
-5. 测试账号：admin、测试密码：123456
-6. sqlserver：默认本机127.0.0.1，账号sa，密码123456
-7. mysql： 默认linux.msg.com，账号：***，密码***
+1. [手摸手，教你用nodejs搭建后台最小系统（大量图文）系列一](https://www.jianshu.com/p/ebef9ffb7851)  
+
+2. [手摸手，教你用nodejs搭建后台最小系统（大量图文）系列二](https://www.jianshu.com/p/60d6dc2d901a)  
+
+3. [数据库结构与数据脚本](https://gitee.com/zhkumsg/node-base-demo/attach_files)  
+
+4. [vue管理系统](https://gitee.com/zhkumsg/vue-base-demo)  
