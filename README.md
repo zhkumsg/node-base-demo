@@ -393,7 +393,7 @@ client.DeleteByIds(ZK_USERINFO, "admin").then(flag => {
 逻辑删除与物理删除的区别在于是否把数据真正从数据库中删除，逻辑删除是把`EB_ISDELETE`字段置为1，底层查询时会自动过滤EB_ISDELETE等于1的记录；物理删除是把数据从数据库中清除，无法恢复。 
 
 ### 如何使用参数化查询？
-为了避免sql注入攻击，如果适用自定义查询的时候，可以用DataAccess实例下的parse方法过滤参数，如：
+为了避免sql注入攻击，如果使用自定义查询的时候，可以用DataAccess实例下的parse方法过滤参数，如：
 ``` js
 let id = ...;
 let sqlstr = "select * from zk_userinfo where zk_id = '" + ds.parse(id) + "'";
